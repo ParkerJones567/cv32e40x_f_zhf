@@ -125,6 +125,7 @@ module cv32e40x_if_stage import cv32e40x_pkg::*;
 
   // eXtension interface signals
   logic [X_ID_WIDTH-1:0] xif_id;
+  logic [X_ID_WIDTH-1:0] xif_id_next;
 
   // ready signal for predecoder, tied to id_ready_i
   logic              predec_ready;
@@ -349,6 +350,10 @@ module cv32e40x_if_stage import cv32e40x_pkg::*;
       if_id_pipe_o.last_op          <= 1'b0;
       if_id_pipe_o.first_op         <= 1'b0;
     end else begin
+    
+      //Need intermediate xif_id.  This prevents xif_id from decrementing if a stall occurs when an instruction to be offloaded is in ID
+      xif_id           <= xif_id_next;
+    
       // Valid pipeline output if we are valid AND the
       // alignment buffer has a valid instruction
       if (if_valid_o && id_ready_i) begin
@@ -360,9 +365,11 @@ module cv32e40x_if_stage import cv32e40x_pkg::*;
 
 
         if_id_pipe_o.trigger_match    <= trigger_match_i;
-        if_id_pipe_o.xif_id           <= xif_id;
+        if_id_pipe_o.xif_id           <= xif_id_next;
         if_id_pipe_o.last_op          <= last_op_o;
         if_id_pipe_o.first_op         <= first_op_o;
+        
+        
 
         // No PC update for tablejump pointer, PC of instruction itself is needed later.
         // No update to the meta compressed, as this is used in calculating the link address.
@@ -480,14 +487,14 @@ module cv32e40x_if_stage import cv32e40x_pkg::*;
       assign xif_compressed_if.compressed_req   = '0;
 
       // TODO: assert that the oustanding IDs are unique
-      assign xif_id = xif_offloading_id_i ? if_id_pipe_o.xif_id + 1 : if_id_pipe_o.xif_id;
+      assign xif_id_next = xif_offloading_id_i ? xif_id + 1 : xif_id;
 
     end else begin : no_x_ext
 
       assign xif_compressed_if.compressed_valid = '0;
       assign xif_compressed_if.compressed_req   = '0;
 
-      assign xif_id                             = '0;
+      assign xif_id_next                             = '0;
 
     end
   endgenerate
