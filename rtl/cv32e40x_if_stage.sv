@@ -124,6 +124,7 @@ module cv32e40x_if_stage import cv32e40x_pkg::*;
   logic              instr_valid;
 
   // eXtension interface signals
+  // Need intermediate xif_id.  This prevents xif_id from decrementing if a stall occurs when an instruction to be offloaded is in ID
   logic [X_ID_WIDTH-1:0] xif_id;
   logic [X_ID_WIDTH-1:0] xif_id_next;
 
@@ -350,9 +351,10 @@ module cv32e40x_if_stage import cv32e40x_pkg::*;
       if_id_pipe_o.last_op          <= 1'b0;
       if_id_pipe_o.first_op         <= 1'b0;
     end else begin
-    
-      //Need intermediate xif_id.  This prevents xif_id from decrementing if a stall occurs when an instruction to be offloaded is in ID
-      xif_id           <= xif_id_next;
+  
+       if (id_ready_i) begin 
+          xif_id           <= xif_id_next;
+       end
     
       // Valid pipeline output if we are valid AND the
       // alignment buffer has a valid instruction
