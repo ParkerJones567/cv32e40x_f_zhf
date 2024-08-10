@@ -145,7 +145,7 @@ module cv32e40x_core import cv32e40x_pkg::*;
   logic         clk;                    // Gated clock
   logic         fetch_enable;
 
-  logic [31:0]  pc_if;                  // Program counter in IF stage
+  logic [31:0]  pc_if /* verilator public */;                  // Program counter in IF stage
   logic         ptr_in_if;              // IF stage contains a pointer
 
   // Jump and branch target and decision (EX->IF)
