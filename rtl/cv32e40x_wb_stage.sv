@@ -82,7 +82,7 @@ module cv32e40x_wb_stage import cv32e40x_pkg::*;
   logic                 lsu_exception;
 
   // eXtension interface signals
-  logic                 xif_waiting;
+  logic                 xif_waiting /* verilator public */;
   logic                 xif_exception;
 
   assign instr_valid = ex_wb_pipe_i.instr_valid && !ctrl_fsm_i.kill_wb && !ctrl_fsm_i.halt_wb;
