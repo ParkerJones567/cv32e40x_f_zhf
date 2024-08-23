@@ -76,6 +76,9 @@ module cv32e40x_wb_stage import cv32e40x_pkg::*;
 
   output logic          last_op_o
 );
+  //expose xif_loadstore from metadata
+  logic xif_loadstore /* verilator public */;
+  assign xif_loadstore = ex_wb_pipe_i.xif_meta.loadstore;
 
   logic                 instr_valid;
   logic                 wb_valid;
