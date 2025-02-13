@@ -175,6 +175,6 @@ module cv32e40x_wb_stage import cv32e40x_pkg::*;
 
   // todo: Handle xif_result_if.result.err as NMI (do not factor into xif_exception as that signal is for synchronous exceptions)
 
-  assign xif_result_if.result_ready = ex_wb_pipe_i.instr_valid && ex_wb_pipe_i.xif_en;
+  assign xif_result_if.result_ready = ex_wb_pipe_i.instr_valid && ex_wb_pipe_i.xif_en && wb_ready_o; //only signal result ready when wb is ready to recieve a result
 
 endmodule

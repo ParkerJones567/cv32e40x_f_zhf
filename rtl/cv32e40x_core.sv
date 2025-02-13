@@ -164,6 +164,12 @@ module cv32e40x_core import cv32e40x_pkg::*;
   // EX/WB pipeline
   ex_wb_pipe_t ex_wb_pipe;
 
+  // expose instruction currently in wb to verilator model
+
+  logic [31:0] instruction_wb /* verilator public */;
+
+  assign instruction_wb = ex_wb_pipe.instr.bus_resp.rdata;
+
   // IF/ID pipeline
   if_id_pipe_t if_id_pipe;
 
