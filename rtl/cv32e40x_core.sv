@@ -180,9 +180,9 @@ module cv32e40x_core import cv32e40x_pkg::*;
   ctrl_fsm_t   ctrl_fsm;
 
   // Register File Write Back
-  logic        rf_we_wb;
-  rf_addr_t    rf_waddr_wb;
-  logic [31:0] rf_wdata_wb;
+  logic        rf_we_wb /* verilator public */;
+  rf_addr_t    rf_waddr_wb /* verilator public */;
+  logic [31:0] rf_wdata_wb /* verilator public */;
 
   // Forwarding RF from EX
   logic [31:0] rf_wdata_ex;
