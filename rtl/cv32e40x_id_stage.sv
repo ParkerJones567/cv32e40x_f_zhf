@@ -751,11 +751,38 @@ module cv32e40x_id_stage import cv32e40x_pkg::*;
       assign xif_insn_accept = (xif_issue_if.issue_valid && xif_issue_if.issue_ready &&  xif_issue_if.issue_resp.accept) || xif_accepted_q;
       assign xif_insn_reject = (xif_issue_if.issue_valid && xif_issue_if.issue_ready && !xif_issue_if.issue_resp.accept) || xif_rejected_q;
 
-      // TODO: These may be missed if issue_valid retracts before ID goes to EX. Need to check for sticky accept as well
-      assign xif_we        = xif_issue_if.issue_valid && xif_issue_if.issue_resp.writeback;
-      assign xif_exception = xif_issue_if.issue_valid && xif_issue_if.issue_resp.exc;
-      assign xif_dualwrite = xif_issue_if.issue_valid && xif_issue_if.issue_resp.dualwrite;
-      assign xif_loadstore = xif_issue_if.issue_valid && xif_issue_if.issue_resp.loadstore;
+
+
+      // Need to hold these signals until the current instruction leaves ID.  Possible to successfully offload instruction before EX stage is ready to accept instruction.
+      logic xif_we_q;
+      logic xif_exception_q;
+      logic xif_dualwrite_q;
+      logic xif_loadstore_q;
+      always_ff @(posedge clk, negedge rst_n) begin
+        if (rst_n == 1'b0) begin
+          xif_we_q  <= 1'b0;
+          xif_exception_q  <= 1'b0;
+          xif_dualwrite_q  <= 1'b0;
+          xif_loadstore_q  <= 1'b0;
+        end else begin
+          if (xif_issue_if.issue_valid && ~ex_ready_i) begin
+            xif_we_q  <= xif_issue_if.issue_resp.writeback;
+            xif_exception_q  <= xif_issue_if.issue_resp.exc;
+            xif_dualwrite_q  <= xif_issue_if.issue_resp.dualwrite;
+            xif_loadstore_q  <= xif_issue_if.issue_resp.loadstore;
+          end else if (ex_ready_i && id_valid_o) begin
+            xif_we_q  <= 1'b0;
+            xif_exception_q  <= 1'b0;
+            xif_dualwrite_q  <= 1'b0;
+            xif_loadstore_q  <= 1'b0;
+          end
+        end
+      end
+
+      assign xif_we        = (xif_issue_if.issue_valid && xif_issue_if.issue_resp.writeback) || xif_we_q;
+      assign xif_exception = (xif_issue_if.issue_valid && xif_issue_if.issue_resp.exc) || xif_exception_q;
+      assign xif_dualwrite = (xif_issue_if.issue_valid && xif_issue_if.issue_resp.dualwrite) || xif_dualwrite_q;
+      assign xif_loadstore = (xif_issue_if.issue_valid && xif_issue_if.issue_resp.loadstore) || xif_loadstore_q;
 
     end else begin : no_x_ext
 
