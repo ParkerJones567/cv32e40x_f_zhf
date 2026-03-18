@@ -350,6 +350,8 @@ module cv32e40x_if_stage import cv32e40x_pkg::*;
       if_id_pipe_o.ptr              <= '0;
       if_id_pipe_o.last_op          <= 1'b0;
       if_id_pipe_o.first_op         <= 1'b0;
+
+      xif_id <= '0;
     end else begin
   
        if (id_ready_i) begin 
