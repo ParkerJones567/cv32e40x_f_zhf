@@ -168,14 +168,30 @@ module cv32e40x_wb_stage import cv32e40x_pkg::*;
   // TODO: Implement writeback to extension context status into mstatus (ecswe, ecsdata)
 
   // Need to wait for the result
-  assign xif_waiting = ex_wb_pipe_i.instr_valid && ex_wb_pipe_i.xif_en && !xif_result_if.result_valid;
+  assign xif_waiting = ex_wb_pipe_i.instr_valid && ex_wb_pipe_i.xif_en && !xif_result_if.result_valid;  //Including result valid here causes a loop stalling a coprocessor waiting for the result ready signal
+
+  logic xif_result_ready_q;
+
+  always_ff @(posedge clk) begin
+    if (!rst_n) begin
+        xif_result_ready_q <= '0;
+    end else begin
+        if (xif_result_ready_q) begin
+          xif_result_ready_q <= !xif_result_if.result_valid; //reset on valid result
+        end else begin
+          xif_result_ready_q <= ex_wb_pipe_i.instr_valid && ex_wb_pipe_i.xif_en && !xif_result_if.result_valid; //Set when ready to receive but no result ready
+        end
+    end
+  end
 
   // Coprocessor signals a synchronous exception
   // TODO: Maybe do something when an exception occurs (other than just inhibiting writeback)
   assign xif_exception = ex_wb_pipe_i.instr_valid && ex_wb_pipe_i.xif_en && xif_result_if.result_valid && xif_result_if.result.exc;
 
   // todo: Handle xif_result_if.result.err as NMI (do not factor into xif_exception as that signal is for synchronous exceptions)
-
-  assign xif_result_if.result_ready = ex_wb_pipe_i.instr_valid && ex_wb_pipe_i.xif_en && wb_ready_o; //only signal result ready when wb is ready to recieve a result
+  logic instr_valid_test, xif_en;
+  assign instr_valid_test = ex_wb_pipe_i.instr_valid;
+  assign xif_en = ex_wb_pipe_i.xif_en;
+  assign xif_result_if.result_ready = ex_wb_pipe_i.instr_valid && ex_wb_pipe_i.xif_en && (wb_ready_o || xif_result_ready_q); //only signal result ready when wb is ready to recieve a result
 
 endmodule
