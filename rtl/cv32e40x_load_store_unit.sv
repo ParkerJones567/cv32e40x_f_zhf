@@ -170,31 +170,23 @@ module cv32e40x_load_store_unit import cv32e40x_pkg::*;
   begin
     case (trans.size) // Data type 00 byte, 01 halfword, 10 word
       2'b00: begin // Writing a byte
-      `ifdef FORCE_ALIGNED_READS
         case (trans.addr[1:0])
           2'b00: be = 4'b0001;
           2'b01: be = 4'b0010;
           2'b10: be = 4'b0100;
           2'b11: be = 4'b1000;
         endcase; // case (trans.addr[1:0])
-      `else
-      be = 4'b0001;
-      `endif
       end
       2'b01:
       begin // Writing a half word
         if (split_q == 1'b0) 
         begin // non-misaligned case
-        `ifdef FORCE_ALIGNED_READS
           case (trans.addr[1:0])
             2'b00: be = 4'b0011;
             2'b01: be = 4'b0110;
             2'b10: be = 4'b1100;
             2'b11: be = 4'b1000;
           endcase; // case (trans.addr[1:0])
-          `else
-          be = 4'b0011;
-          `endif
         end
         else
         begin // misaligned case
@@ -205,16 +197,12 @@ module cv32e40x_load_store_unit import cv32e40x_pkg::*;
       begin // Writing a word (note: XIF memory requests always write a word)
         if (split_q == 1'b0)
         begin // non-misaligned case
-          `ifdef FORCE_ALIGNED_READS
           case (trans.addr[1:0])
             2'b00: be = 4'b1111;
             2'b01: be = 4'b1110;
             2'b10: be = 4'b1100;
             2'b11: be = 4'b1000;
           endcase; // case (trans.addr[1:0])
-          `else
-          be = 4'b1111;
-          `endif
         end
         else
         begin // misaligned case
@@ -234,16 +222,12 @@ module cv32e40x_load_store_unit import cv32e40x_pkg::*;
 
   always_comb
   begin
-    `ifdef FORCE_ALIGNED_READS
     case (trans.addr[1:0])
       2'b00: wdata = trans.wdata[31:0];
       2'b01: wdata = {trans.wdata[23:0], trans.wdata[31:24]};
       2'b10: wdata = {trans.wdata[15:0], trans.wdata[31:16]};
       2'b11: wdata = {trans.wdata[ 7:0], trans.wdata[31: 8]};
     endcase; // case (trans.addr[1:0])
-    `else
-    wdata = trans.wdata[31:0];
-    `endif
   end
 
   // FF for rdata alignment and sign-extension
@@ -335,11 +319,7 @@ module cv32e40x_load_store_unit import cv32e40x_pkg::*;
                                         {resp_rdata, resp_rdata}; // Set up data for shifting resp_data LSBs into MSBs of rdata_aligned
 
   // Realign rdata
-  `ifdef FORCE_ALIGNED_READS
-    assign rdata_aligned = rdata_full >> (8*rdata_offset_q);
-  `else
-    assign rdata_aligned = rdata_full;
-  `endif
+  assign rdata_aligned = rdata_full >> (8*rdata_offset_q);
 
   // Sign-extend aligned rdata
   always_comb begin
@@ -390,7 +370,6 @@ module cv32e40x_load_store_unit import cv32e40x_pkg::*;
     lsu_split_0_o = 1'b0;
     misaligned_halfword = 1'b0;
 
-    `ifdef FORCE_ALIGNED_READS
     if (valid_0_i && !xif_req && !split_q)
     begin
       case (trans.size)
@@ -408,7 +387,6 @@ module cv32e40x_load_store_unit import cv32e40x_pkg::*;
         end
       endcase // case (trans.size)
     end
-    `endif
   end
 
   // Set flags for first and last op
